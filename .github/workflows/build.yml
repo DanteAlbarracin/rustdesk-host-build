@@ -46,6 +46,8 @@ jobs:
   uses: actions/upload-artifact@v3
   with:
     name: rustdesk-host-hidden
-        path: target/release/rustdesk.exe
+    path: rustdesk/target/nsis/*.exe
+
+
 
 
