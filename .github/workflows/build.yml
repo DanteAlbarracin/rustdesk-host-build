@@ -1,4 +1,3 @@
-
 name: Build Hidden RustDesk Host
 
 on:
@@ -7,30 +6,44 @@ on:
 jobs:
   build:
     runs-on: windows-latest
+
     steps:
-    - name: Checkout
-      uses: actions/checkout@v2
-
-    - name: Download RustDesk Host
+    - name: Descargar código fuente de RustDesk
       run: |
-        Invoke-WebRequest -Uri "https://github.com/rustdesk/rustdesk/releases/latest/download/rustdesk-host.exe" -OutFile "rustdesk-host.exe"
+        git clone --recurse-submodules https://github.com/rustdesk/rustdesk.git
+        cd rustdesk
+        git checkout nightly
+        git submodule update --init --recursive
 
-    - name: Configure installer silently
+    - name: Instalar Rust y dependencias
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        override: true
+
+    - name: Instalar paquetes adicionales
       run: |
-        $content = @"
-        [config]
-        unattended_password = "Sswc2025."
-        "@
-        Set-Content -Path "rustdesk.conf" -Value $content
+        choco install -y nsis wget
 
-    - name: Package installer
+    - name: Configurar build oculto
       run: |
-        mkdir output
-        copy rustdesk-host.exe output/
-        copy rustdesk.conf output/
+        cd rustdesk
+        echo RUSTDESK_RELEASE=true > .env
+        echo RUSTDESK_INSTALLER_PWD="Sswc2025." >> .env
+        echo RUSTDESK_HIDE=1 >> .env
+        echo RUSTDESK_SHOW_TRAY=1 >> .env
+        echo RUSTDESK_CUSTOM_ID_SERVER=host.rustdesk.com >> .env
+        echo RUSTDESK_CUSTOM_RELAY_SERVER=host.rustdesk.com:21117 >> .env
+        echo RUSTDESK_NO_FILE_TRANSFER=1 >> .env
+        echo RUSTDESK_DISABLE_UPGRADE=1 >> .env
 
-    - name: Upload artifact
+    - name: Compilar instalador
+      run: |
+        cd rustdesk
+        cargo xtask installer
+
+    - name: Subir instalador como artefacto
       uses: actions/upload-artifact@v3
       with:
         name: rustdesk-hidden
-        path: output
+        path: rustdesk/target/installer/*.exe
