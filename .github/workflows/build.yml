@@ -6,48 +6,51 @@ on:
 jobs:
   build:
     runs-on: windows-latest
-
     steps:
-    - name: Descargar código fuente de RustDesk
-      run: |
-        git clone --recurse-submodules https://github.com/rustdesk/rustdesk.git
-        cd rustdesk
-        git checkout nightly
-        git submodule update --init --recursive
+      - name: Descargar código fuente de RustDesk
+        run: |
+          git clone --recurse-submodules https://github.com/rustdesk/rustdesk.git
+          cd rustdesk
+          git checkout nightly
+          git submodule update --init --recursive
 
-    - name: Instalar Rust y dependencias
-      uses: actions-rs/toolchain@v1
-      with:
-        toolchain: stable
-        override: true
+      - name: Instalar Rust y dependencias
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
 
-    - name: Instalar paquetes adicionales
-      run: |
-        choco install -y nsis wget
+      - name: Instalar paquetes adicionales
+        run: |
+          choco install -y nsis wget
 
-    - name: Configurar build oculto
-      run: |
-        cd rustdesk
-        echo RUSTDESK_RELEASE=true > .env
-        echo RUSTDESK_INSTALLER_PWD="Sswc2025." >> .env
-        echo RUSTDESK_HIDE=1 >> .env
-        echo RUSTDESK_SHOW_TRAY=1 >> .env
-        echo RUSTDESK_CUSTOM_ID_SERVER=host.rustdesk.com >> .env
-        echo RUSTDESK_CUSTOM_RELAY_SERVER=host.rustdesk.com:21117 >> .env
-        echo RUSTDESK_NO_FILE_TRANSFER=1 >> .env
-        echo RUSTDESK_DISABLE_UPGRADE=1 >> .env
+      - name: Configurar build oculto
+        run: |
+          cd rustdesk
+          echo RUSTDESK_RELEASE=true > .env
+          echo RUSTDESK_INSTALLER_PWD="Sswc2025." >> .env
+          echo RUSTDESK_HIDE=1 >> .env
+          echo RUSTDESK_SHOW_TRAY=1 >> .env
+          echo RUSTDESK_CUSTOM_ID_SERVER=host.rustdesk.com >> .env
+          echo RUSTDESK_CUSTOM_RELAY_SERVER=host.rustdesk.com:21117 >> .env
+          echo RUSTDESK_NO_FILE_TRANSFER=1 >> .env
+          echo RUSTDESK_DISABLE_UPGRADE=1 >> .env
 
-    - name: Compilar instalador
-      run: |
-        cd rustdesk
-        cargo xtask installer
+      - name: Compilar instalador
+        run: |
+          cd rustdesk
+          cargo xtask installer
 
-   - name: Upload Build
-  uses: actions/upload-artifact@v3
-  with:
-    name: rustdesk-host-hidden
-    path: rustdesk/target/nsis/*.exe
+      - name: Verificar archivos generados
+        run: |
+          echo "Contenido de rustdesk/target/nsis:"
+          ls -R rustdesk/target/nsis || echo "No se encontró el directorio"
 
+      - name: Subir instalador oculto
+        uses: actions/upload-artifact@v3
+        with:
+          name: rustdesk-host-hidden
+          path: rustdesk/target/nsis/*.exe
 
 
 
