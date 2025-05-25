@@ -42,8 +42,10 @@ jobs:
         cd rustdesk
         cargo xtask installer
 
-    - name: Subir instalador como artefacto
-      uses: actions/upload-artifact@v3
-      with:
-        name: rustdesk-hidden
-        path: rustdesk/target/installer/*.exe
+   - name: Upload Build
+  uses: actions/upload-artifact@v3
+  with:
+    name: rustdesk-host-hidden
+        path: target/release/rustdesk.exe
+
+
